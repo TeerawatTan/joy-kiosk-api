@@ -2,7 +2,7 @@
 
 namespace JoyKioskApi.Constants
 {
-    public class Constant
+    public class AppConstant
     {
         public static readonly string SE_Asia_Standard_Time = "SE Asia Standard Time";
         public static readonly CultureInfo DATETIME_FORMAT = new CultureInfo("es-ES");
