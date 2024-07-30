@@ -17,7 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
     <Folder Include="Datas\" />
     <Folder Include="Models\" />
     <Folder Include="Videos\" />

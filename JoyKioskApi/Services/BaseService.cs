@@ -15,16 +15,16 @@ namespace JoyKioskApi.Services
             _configuration = configuration;
         }
 
-        protected async Task<LoginResponseDto> CreateTokenUser(string refreshToken, string userId, string username, int roleId)
+        protected async Task<LoginResponseDto> CreateTokenUser(string refreshToken, string userId, string custId)
         {
             string jwtKey = _configuration["Jwts:Key"]!;
 
             List<Claim> claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, refreshToken),
-                new Claim(JwtRegisteredClaimNames.Jti, username),
-                new Claim(ClaimTypes.Role, roleId.ToString()),
-                new Claim(ClaimTypes.Name,username),
+                new Claim(JwtRegisteredClaimNames.Jti, userId),
+                new Claim(ClaimTypes.NameIdentifier, custId),
+                new Claim(ClaimTypes.Name, userId),
                 new Claim(JwtRegisteredClaimNames.NameId, userId),
             };
 
@@ -47,12 +47,12 @@ namespace JoyKioskApi.Services
 
             LoginResponseDto loginResponse = new LoginResponseDto()
             {
-                Id = userId,
                 AccessToken = new JwtSecurityTokenHandler().WriteToken(token),
                 RefreshToken = refreshToken,
-                GenerateDate = issues,
+                GeneratedDate = issues,
                 ExpireDate = expires,
-                RoleId = roleId
+                UserId = userId,
+                CustId = custId
             };
             return await Task.FromResult<LoginResponseDto>(loginResponse);
         }
