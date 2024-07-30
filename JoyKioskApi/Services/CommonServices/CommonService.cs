@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Headers;
+using System.Text;
 
 namespace JoyKioskApi.Services.CommonServices;
 
@@ -13,7 +14,11 @@ public class CommonService : ICommonService
         _client.BaseAddress = new Uri(_configuration["CrmApi"]!.ToString());
         _client.DefaultRequestHeaders.Accept.Clear();
         _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(_configuration["AuthToken"]!.ToString());
+        //_client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(_configuration["AuthToken"]!.ToString());
+
+        var byteArray = Encoding.ASCII.GetBytes("admin:1234");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+
     }
 
     public async Task<HttpResponseMessage> CrmGetAsync(string endpoint) => await _client.GetAsync(endpoint);
