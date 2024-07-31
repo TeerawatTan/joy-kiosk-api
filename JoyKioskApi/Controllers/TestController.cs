@@ -24,7 +24,10 @@ namespace JoyKioskApi.Controllers
         [HttpGet("Examm-Category")]
         public async Task<IActionResult> GetCategory()
         {
-            var responseMessage = await _commonService.CrmGetAsync("/api/categories/dropdown");
+            string username = "admin";
+            string password = "1234";
+            string endpoint = "/api/categories/dropdown";
+            var responseMessage = await _commonService.CrmGetAsync(username, password, endpoint);
             responseMessage.EnsureSuccessStatusCode();
 
             var responseContent = await responseMessage.Content.ReadAsStringAsync();

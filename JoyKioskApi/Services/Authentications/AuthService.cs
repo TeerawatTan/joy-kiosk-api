@@ -65,7 +65,8 @@ namespace JoyKioskApi.Services.Authentications
             {
                 try
                 {
-                    var responseMessage = await _commonService.CrmGetAsync("/api/customer/login");
+                    string endpoint = "/api/customer/login";
+                    var responseMessage = await _commonService.CrmGetAsync(req.Username, req.Password, endpoint);
                     responseMessage.EnsureSuccessStatusCode();
 
                     var responseContent = await responseMessage.Content.ReadAsStringAsync();
