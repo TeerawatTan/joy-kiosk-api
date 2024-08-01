@@ -1,11 +1,12 @@
 ﻿using JoyKioskApi.Constants;
 using JoyKioskApi.Dtos.Authentications;
 using JoyKioskApi.Dtos.Commons;
+using JoyKioskApi.Helpers;
+using JoyKioskApi.Models;
+using JoyKioskApi.Repositories.Users;
 using JoyKioskApi.Services.CommonServices;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
-using System.Reflection.Metadata;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -18,12 +19,16 @@ namespace JoyKioskApi.Services.Authentications
     {
         private readonly IConfiguration _configuration;
         private readonly ICommonService _commonService;
+        private readonly IUserRepo _userRepo;
+        private readonly IUserTokenRepo _userTokenRepo;
         private DateTime refreshTokenExp = DateTime.Now.AddHours(1).ToLocalTime();
 
-        public AuthService(IConfiguration configuration, ICommonService commonService) : base(configuration)
+        public AuthService(IConfiguration configuration, ICommonService commonService, IUserRepo userRepo, IUserTokenRepo userTokenRepo) : base(configuration)
         {
             _configuration = configuration;
             _commonService = commonService;
+            _userRepo = userRepo;
+            _userTokenRepo = userTokenRepo;
         }
 
         private string GenerateRefreshToken()
@@ -61,16 +66,23 @@ namespace JoyKioskApi.Services.Authentications
 
         public async Task<ResultResponse> Login(LoginRequestDto req)
         {
-            if (req is not null && !string.IsNullOrWhiteSpace(req.Username) && !string.IsNullOrWhiteSpace(req.Password))
+            if (req is null)
             {
-                try
+                return new ResultResponse()
                 {
-                    string endpoint = "/api/customer/login";
-                    var responseMessage = await _commonService.CrmGetAsync(req.Username, req.Password, endpoint);
-                    responseMessage.EnsureSuccessStatusCode();
+                    IsSuccess = false,
+                    Data = AppConstant.STATUS_INVALID_REQUEST_DATA
+                };
+            }
 
-                    var responseContent = await responseMessage.Content.ReadAsStringAsync();
+            try
+            {
+                string endpoint = "/api/customer/login";
+                var responseMessage = await _commonService.CrmGetAsync(req.Username, req.Password, endpoint);
+                var responseContent = await responseMessage.Content.ReadAsStringAsync();
 
+                if (responseMessage.StatusCode == System.Net.HttpStatusCode.OK)
+                {
                     var resCrmLogin = JsonSerializer.Deserialize<EchoApiResponse>(responseContent);
 
                     if (resCrmLogin == null || resCrmLogin.Data == null)
@@ -86,31 +98,44 @@ namespace JoyKioskApi.Services.Authentications
 
                     string refreshToken = GenerateRefreshToken();
 
-                    //UserTokenModel userToken = new();
+                    UserTokenModel userToken = new();
 
-                    //_context.Database.BeginTransaction();
+                    var findUser = await _userRepo.FindOneUserByUsername(req.Username);
 
-                    //var findUserToken = await _context.UserTokens.FirstOrDefaultAsync(f => f.UserId == userModel.Id);
-                    //if (findUserToken == null)
-                    //{
-                    //    userToken.UserId = userModel.Id;
-                    //    userToken.UserName = userModel.Username;
-                    //    userToken.UserRoleId = userModel.RoleId;
-                    //    userToken.Token = refreshToken;
-                    //    userToken.TokenExpire = DateTime.Now.AddDays(1).ToLocalTime();
-                    //    _context.UserTokens.Add(userToken);
-                    //}
-                    //else
-                    //{
-                    //    findUserToken.Token = refreshToken;
-                    //    findUserToken.TokenExpire = DateTime.Now.AddDays(1).ToLocalTime();
-                    //    _context.UserTokens.Update(findUserToken);
-                    //}
+                    if (findUser is not null)
+                    {
+                        var findUserToken = await _userTokenRepo.FindOneUserTokenById(findUser.Id);
+                        if (findUserToken == null)
+                        {
+                            userToken.Id = findUser.Id;
+                            userToken.RefreshToken = refreshToken;
+                            userToken.TokenExpire = DateTime.Now.AddMinutes(1).ToLocalTime();
+                            _userTokenRepo.InsertUserToken(userToken);
+                        }
+                        else
+                        {
+                            findUserToken.RefreshToken = refreshToken;
+                            findUserToken.TokenExpire = DateTime.Now.AddMinutes(1).ToLocalTime();
+                            _userTokenRepo.UpdateUserToken(findUserToken);
+                        }
+                    }
+                    else
+                    {
+                        string hashPassword = PasswordHasher.Hash(req.Password);
 
-                    //_context.SaveChanges();
-                    //_context.Database.CommitTransaction();
+                        findUser = new();
+                        findUser.Id = Guid.NewGuid();
+                        findUser.UserId = crmLoginRes.UserId ?? 0;
+                        findUser.CustId = crmLoginRes.CustId ?? 0;
+                        findUser.UserName = req.Username;
+                        findUser.PasswordHash = hashPassword;
+                        findUser.CreatedBy = crmLoginRes.UserId.ToString();
+                        findUser.CreatedDate = DateTime.Now.ToLocalTime();
+                        findUser.IsActive = true;
+                        _userRepo.InsertUser(findUser);
+                    }
 
-                    var res = await CreateTokenUser(refreshToken, crmLoginRes.UserId!, crmLoginRes.CustId!);
+                    var res = await CreateTokenUser(refreshToken, findUser!.Id, crmLoginRes.UserId.ToString(), crmLoginRes.CustId.ToString());
 
                     return new ResultResponse()
                     {
@@ -118,36 +143,71 @@ namespace JoyKioskApi.Services.Authentications
                         Data = res
                     };
                 }
-                catch (Exception ex)
+
+                return new ResultResponse()
                 {
-                    return new ResultResponse()
-                    {
-                        IsSuccess = false,
-                        Data = ex.Message
-                    };
-                }
+                    IsSuccess = false,
+                    Data = responseContent
+                };
             }
+            catch (Exception ex)
+            {
+                return new ResultResponse()
+                {
+                    IsSuccess = false,
+                    Data = ex.Message
+                };
+            }
+        }
+
+        public async Task<ResultResponse> RefreshToken(RefreshTokenDto req, Guid id)
+        {
+            var findUser = await _userRepo.FindOneUserById(id);
+
+            if (findUser is null)
+            {
+                return new ResultResponse()
+                {
+                    IsSuccess = false,
+                    Data = AppConstant.STATUS_INVALID_REQUEST_DATA
+                };
+            }
+
+            var userToken = await _userTokenRepo.FindOneUserTokenById(id);
+
+            if (userToken is null)
+            {
+                return new ResultResponse()
+                {
+                    IsSuccess = false,
+                    Data = AppConstant.STATUS_DATA_NOT_FOUND
+                };
+            }
+
+            string newRefreshToken = GenerateRefreshToken();
+            userToken.RefreshToken = newRefreshToken;
+            userToken.TokenExpire = DateTime.Now.AddMinutes(1).ToLocalTime();
+
+            _userTokenRepo.UpdateUserToken(userToken);
+
+            var res = await CreateTokenUser(newRefreshToken, id, findUser.UserId.ToString(), findUser.CustId.ToString());
 
             return new ResultResponse()
             {
-                IsSuccess = false,
-                Data = AppConstant.STATUS_DATA_NOT_FOUND
+                IsSuccess = true,
+                Data = res
             };
         }
 
-        public Task<ResultResponse> RefreshToken(FindUserTokenResDto req, string refreshToken)
+        public async Task<bool> ValidateRefreshToken(Guid id, string refreshToken)
         {
-            throw new NotImplementedException();
-        }
-
-        public Task<bool> ValidateRefreshToken(string username, string refreshToken)
-        {
-            throw new NotImplementedException();
+            var user = await _userTokenRepo.FindOneUserTokenById(id);
+            return user != null && user.RefreshToken == refreshToken && user.TokenExpire > DateTime.Now.ToLocalTime();
         }
 
         public Task InvalidateRefreshToken(string username)
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
     }
 }

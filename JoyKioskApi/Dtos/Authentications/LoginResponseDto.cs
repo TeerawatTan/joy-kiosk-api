@@ -15,10 +15,10 @@ namespace JoyKioskApi.Dtos.Authentications
     public class LoginCrmResDto
     {
         [JsonPropertyName("userId")]
-        public string? UserId { get; set; }
+        public int? UserId { get; set; }
 
         [JsonPropertyName("custId")]
-        public string? CustId { get; set; }
+        public int? CustId { get; set; }
 
         [JsonPropertyName("username")]
         public string? Username { get; set; }

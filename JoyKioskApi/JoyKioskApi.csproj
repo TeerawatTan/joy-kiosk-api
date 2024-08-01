@@ -17,10 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Datas\" />
-    <Folder Include="Models\" />
     <Folder Include="Videos\" />
-    <Folder Include="Repositories\" />
   </ItemGroup>
 
 </Project>

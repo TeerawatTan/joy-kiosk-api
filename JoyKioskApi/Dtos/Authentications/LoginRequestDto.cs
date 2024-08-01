@@ -28,8 +28,7 @@ namespace JoyKioskApi.Dtos.Authentications
 
     public class FindUserTokenResDto
     {
-        public string? Id { get; set; }
-        public string? Username { get; set; }
+        public Guid? Id { get; set; }
         public string? RefreshToken { get; set; }
         public DateTime? TokenExpired { get; set; }
     }

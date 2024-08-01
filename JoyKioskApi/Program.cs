@@ -1,5 +1,8 @@
+using JoyKioskApi.Datas;
+using JoyKioskApi.Repositories.Users;
 using JoyKioskApi.Services.Authentications;
 using JoyKioskApi.Services.CommonServices;
+using JoyKioskApi.Services.Users;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.IdentityModel.Tokens;
@@ -10,17 +13,20 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+builder.Services.AddDbContext<AppDbContext>();
+
 // Add Services
 #region Services
 
 // Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICommonService, CommonService>();
-
+builder.Services.AddScoped<IUserService, UserService>();
 
 
 // Repositories
-
+builder.Services.AddScoped<IUserRepo, UserRepo>();
+builder.Services.AddScoped<IUserTokenRepo, UserTokenRepo>();
 
 #endregion
 
@@ -112,8 +118,8 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 //if (app.Environment.IsDevelopment())
 //{
-    app.UseSwagger();
-    app.UseSwaggerUI();
+app.UseSwagger();
+app.UseSwaggerUI();
 //}
 
 app.UseHttpsRedirection();

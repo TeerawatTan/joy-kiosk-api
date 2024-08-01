@@ -7,9 +7,9 @@ namespace JoyKioskApi.Services.Authentications
     public interface IAuthService
     {
         Task<ResultResponse> Login(LoginRequestDto req);
-        Task<ResultResponse> RefreshToken(FindUserTokenResDto req, string refreshToken);
+        Task<ResultResponse> RefreshToken(RefreshTokenDto req, Guid id);
         ClaimsPrincipal GetPrincipalFromExpiredToken(string token);
-        Task<bool> ValidateRefreshToken(string username, string refreshToken);
+        Task<bool> ValidateRefreshToken(Guid id, string refreshToken);
         Task InvalidateRefreshToken(string username);
     }
 }
