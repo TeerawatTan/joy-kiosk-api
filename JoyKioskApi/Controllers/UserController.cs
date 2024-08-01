@@ -1,5 +1,6 @@
 ﻿using JoyKioskApi.Dtos.Authentications;
 using JoyKioskApi.Services.Users;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JoyKioskApi.Controllers
@@ -16,6 +17,7 @@ namespace JoyKioskApi.Controllers
             _userService = userService;
         }
 
+        [AllowAnonymous]
         [HttpPost]
         [Route("validate")]
         public async Task<ActionResult> Validate([FromBody] LoginRequestDto req)

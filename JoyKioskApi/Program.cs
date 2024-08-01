@@ -1,4 +1,5 @@
 using JoyKioskApi.Datas;
+using JoyKioskApi.Helpers;
 using JoyKioskApi.Repositories.Users;
 using JoyKioskApi.Services.Authentications;
 using JoyKioskApi.Services.CommonServices;
@@ -7,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.Filters;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,6 +40,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Joy Kiosk API Document", Version = "v.1" });
+    c.OperationFilter<SecurityRequirementsOperationFilter>();
+
     c.TagActionsBy(api =>
     {
         if (api.GroupName != null)
@@ -63,20 +67,20 @@ builder.Services.AddSwaggerGen(c =>
         Scheme = JwtBearerDefaults.AuthenticationScheme,
         BearerFormat = "JWT"
     });
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-                {
-                    {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = JwtBearerDefaults.AuthenticationScheme
-                            }
-                        },
-                        Array.Empty<string>()
-        }
-    });
+    //c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    //            {
+    //                {
+    //                    new OpenApiSecurityScheme
+    //                    {
+    //                        Reference = new OpenApiReference
+    //                        {
+    //                            Type = ReferenceType.SecurityScheme,
+    //                            Id = JwtBearerDefaults.AuthenticationScheme
+    //                        }
+    //                    },
+    //                    Array.Empty<string>()
+    //    }
+    //});
     c.CustomSchemaIds(a => a.FullName);
 });
 

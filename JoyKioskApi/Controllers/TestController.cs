@@ -22,20 +22,20 @@ namespace JoyKioskApi.Controllers
             return Ok("This test called api and it's ok!");
         }
 
-        [HttpGet("Examm-Category")]
-        public async Task<IActionResult> GetCategory()
-        {
-            string username = "admin";
-            string password = "1234";
-            string endpoint = "/api/categories/dropdown";
-            var responseMessage = await _commonService.CrmGetAsync(username, password, endpoint);
-            responseMessage.EnsureSuccessStatusCode();
+        //[HttpGet("Examm-Category")]
+        //public async Task<IActionResult> GetCategory()
+        //{
+        //    string username = "admin";
+        //    string password = "1234";
+        //    string endpoint = "/api/categories/dropdown";
+        //    var responseMessage = await _commonService.CrmGetAsync(username, password, endpoint);
+        //    responseMessage.EnsureSuccessStatusCode();
 
-            var responseContent = await responseMessage.Content.ReadAsStringAsync();
+        //    var responseContent = await responseMessage.Content.ReadAsStringAsync();
 
-            var response = JsonSerializer.Deserialize<EchoApiResponse>(responseContent);
+        //    var response = JsonSerializer.Deserialize<EchoApiResponse>(responseContent);
 
-            return Ok(response);
-        }
+        //    return Ok(response);
+        //}
     }
 }
