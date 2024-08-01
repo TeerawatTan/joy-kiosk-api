@@ -7,6 +7,7 @@ namespace JoyKioskApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Produces("application/json")]
     public class TestController : ControllerBase
     {
         private readonly ICommonService _commonService;

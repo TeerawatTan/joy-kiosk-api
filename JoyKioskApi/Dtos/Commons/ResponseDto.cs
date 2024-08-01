@@ -8,12 +8,6 @@
             public object? Data { get; set; }
         }
 
-        public class ErrorResponse
-        {
-            public int ErrorCode { get; set; }
-            public string? ErrorMessage { get; set; }
-        }
-
         public class PageginationResultResponse<TModel>
         {
             public int PageSize { get; set; }

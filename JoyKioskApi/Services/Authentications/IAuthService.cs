@@ -10,6 +10,5 @@ namespace JoyKioskApi.Services.Authentications
         Task<ResultResponse> RefreshToken(RefreshTokenDto req, Guid id);
         ClaimsPrincipal GetPrincipalFromExpiredToken(string token);
         Task<bool> ValidateRefreshToken(Guid id, string refreshToken);
-        Task InvalidateRefreshToken(string username);
     }
 }

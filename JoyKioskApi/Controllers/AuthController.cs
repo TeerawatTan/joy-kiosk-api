@@ -4,15 +4,15 @@ using JoyKioskApi.Dtos.Commons;
 using JoyKioskApi.Services.Authentications;
 using JoyKioskApi.Services.Users;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using static JoyKioskApi.Dtos.Commons.ResponseDto;
 
 namespace JoyKioskApi.Controllers
 {
-    [Route("api/[controller]/[action]")]
+    [Route("api/[controller]")]
     [ApiController]
+    [Produces("application/json")]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
@@ -25,6 +25,7 @@ namespace JoyKioskApi.Controllers
         }
 
         [HttpPost]
+        [Route("Login")]
         public async Task<ActionResult<LoginResponseDto>> Login([FromBody] LoginRequestDto req)
         {
             var response = await _authService.Login(req);
@@ -36,6 +37,7 @@ namespace JoyKioskApi.Controllers
         }
 
         [HttpPost]
+        [Route("RefreshToken")]
         public async Task<ActionResult<LoginResponseDto>> RefreshToken([FromBody] RefreshTokenDto req)
         {
             if (req is null)

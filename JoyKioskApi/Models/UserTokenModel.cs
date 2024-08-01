@@ -13,5 +13,7 @@ namespace JoyKioskApi.Models
         public string? RefreshToken { get; set; }
         [Required]
         public DateTime TokenExpire { get; set; }
+        [Required]
+        public DateTime CrmTokenExpire { get; set; }
     }
 }

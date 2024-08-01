@@ -44,6 +44,6 @@ namespace JoyKioskApi.Constants
         public static readonly string DATA_STATUS_FORBIDDEN = "Your request is denied";
         public static readonly string DATA_OTP_EXPIRE = "OTP หมดอายุ โปรดขอรหัสอีกครั้ง";
         public static readonly string DATA_CODE_EXPIRE = "รหัสยืนยันนี้ไม่ถูกต้อง หรือรหัสยืนยันหมดอายุแล้ว โปรดขอรหัสอีกครั้ง";
-        
+        public static readonly string PLEASE_RE_LOGIN = "Please log in again.";
     }
 }

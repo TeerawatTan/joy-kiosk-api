@@ -21,7 +21,6 @@ namespace JoyKioskApi.Services.Authentications
         private readonly ICommonService _commonService;
         private readonly IUserRepo _userRepo;
         private readonly IUserTokenRepo _userTokenRepo;
-        private DateTime refreshTokenExp = DateTime.Now.AddHours(1).ToLocalTime();
 
         public AuthService(IConfiguration configuration, ICommonService commonService, IUserRepo userRepo, IUserTokenRepo userTokenRepo) : base(configuration)
         {
@@ -77,15 +76,15 @@ namespace JoyKioskApi.Services.Authentications
 
             try
             {
-                string endpoint = "/api/customer/login";
-                var responseMessage = await _commonService.CrmGetAsync(req.Username, req.Password, endpoint);
+                string endpoint = "/api/user/login";
+                var responseMessage = await _commonService.PostUnAuthenAsync(endpoint, req);
                 var responseContent = await responseMessage.Content.ReadAsStringAsync();
 
                 if (responseMessage.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     var resCrmLogin = JsonSerializer.Deserialize<EchoApiResponse>(responseContent);
 
-                    if (resCrmLogin == null || resCrmLogin.Data == null)
+                    if (resCrmLogin == null || resCrmLogin.Success == false || resCrmLogin.Data == null)
                     {
                         return new ResultResponse()
                         {
@@ -110,12 +109,14 @@ namespace JoyKioskApi.Services.Authentications
                             userToken.Id = findUser.Id;
                             userToken.RefreshToken = refreshToken;
                             userToken.TokenExpire = DateTime.Now.AddMinutes(1).ToLocalTime();
+                            userToken.CrmTokenExpire = DateTime.Now.AddDays(1).ToLocalTime();
                             _userTokenRepo.InsertUserToken(userToken);
                         }
                         else
                         {
                             findUserToken.RefreshToken = refreshToken;
                             findUserToken.TokenExpire = DateTime.Now.AddMinutes(1).ToLocalTime();
+                            findUserToken.CrmTokenExpire = DateTime.Now.AddDays(1).ToLocalTime();
                             _userTokenRepo.UpdateUserToken(findUserToken);
                         }
                     }
@@ -184,6 +185,17 @@ namespace JoyKioskApi.Services.Authentications
                 };
             }
 
+            if (userToken.CrmTokenExpire > DateTime.Now.ToLocalTime() || userToken.CrmTokenExpire.Date < DateTime.Now.Date.ToLocalTime())
+            {
+                await InvalidateRefreshToken(id);
+
+                return new ResultResponse()
+                {
+                    IsSuccess = false,
+                    Data = AppConstant.STATUS_TOKEN_EXPIRED + ", " + AppConstant.PLEASE_RE_LOGIN
+                };
+            }
+
             string newRefreshToken = GenerateRefreshToken();
             userToken.RefreshToken = newRefreshToken;
             userToken.TokenExpire = DateTime.Now.AddMinutes(1).ToLocalTime();
@@ -205,9 +217,16 @@ namespace JoyKioskApi.Services.Authentications
             return user != null && user.RefreshToken == refreshToken && user.TokenExpire > DateTime.Now.ToLocalTime();
         }
 
-        public Task InvalidateRefreshToken(string username)
+        public async Task InvalidateRefreshToken(Guid id)
         {
-            return Task.CompletedTask;
+            var userToken = await _userTokenRepo.FindOneUserTokenById(id);
+
+            if (userToken is not null)
+            {
+                _userTokenRepo.DeleteUserToken(userToken);
+            }
+
+            await Task.CompletedTask;
         }
     }
 }
