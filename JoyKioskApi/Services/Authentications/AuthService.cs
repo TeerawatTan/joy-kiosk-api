@@ -185,9 +185,20 @@ namespace JoyKioskApi.Services.Authentications
                 };
             }
 
-            if (userToken.CrmTokenExpire > DateTime.Now.ToLocalTime() || userToken.CrmTokenExpire.Date < DateTime.Now.Date.ToLocalTime())
+            if (userToken.TokenExpire > DateTime.Now.ToLocalTime())
             {
-                await InvalidateRefreshToken(id);
+                await RemoveRefreshToken(id);
+
+                return new ResultResponse()
+                {
+                    IsSuccess = false,
+                    Data = AppConstant.STATUS_TOKEN_EXPIRED
+                };
+            }
+
+            if (userToken.CrmTokenExpire > DateTime.Now.ToLocalTime())
+            {
+                await RemoveRefreshToken(id);
 
                 return new ResultResponse()
                 {
@@ -217,7 +228,7 @@ namespace JoyKioskApi.Services.Authentications
             return user != null && user.RefreshToken == refreshToken && user.TokenExpire > DateTime.Now.ToLocalTime();
         }
 
-        public async Task InvalidateRefreshToken(Guid id)
+        public async Task RemoveRefreshToken(Guid id)
         {
             var userToken = await _userTokenRepo.FindOneUserTokenById(id);
 

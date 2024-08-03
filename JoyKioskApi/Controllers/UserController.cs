@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace JoyKioskApi.Controllers
 {
-    [Route("api/user")]
+    [Route("api/[controller]")]
     [ApiController]
     [Produces("application/json")]
     public class UserController : ControllerBase
