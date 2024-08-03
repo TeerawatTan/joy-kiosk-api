@@ -3,10 +3,9 @@ using JoyKioskApi.Dtos.Authentications;
 using JoyKioskApi.Dtos.Commons;
 using JoyKioskApi.Services.Authentications;
 using JoyKioskApi.Services.Users;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using static JoyKioskApi.Dtos.Commons.ResponseDto;
 
 namespace JoyKioskApi.Controllers
 {
@@ -24,6 +23,7 @@ namespace JoyKioskApi.Controllers
             _userService = userService;
         }
 
+        [AllowAnonymous]
         [HttpPost]
         [Route("Login")]
         public async Task<ActionResult<LoginResponseDto>> Login([FromBody] LoginRequestDto req)
@@ -36,6 +36,7 @@ namespace JoyKioskApi.Controllers
             return Ok(response);
         }
 
+        [AllowAnonymous]
         [HttpPost]
         [Route("RefreshToken")]
         public async Task<ActionResult<LoginResponseDto>> RefreshToken([FromBody] RefreshTokenDto req)
@@ -62,8 +63,6 @@ namespace JoyKioskApi.Controllers
                     Data = AppConstant.DATA_STATUS_FORBIDDEN
                 });
             }
-
-            int userId = int.Parse(principal.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.NameId)?.Value ?? "0");
 
             var isValidRefreshToken = await _authService.ValidateRefreshToken(uId, refreshToken);
             if (!isValidRefreshToken)
