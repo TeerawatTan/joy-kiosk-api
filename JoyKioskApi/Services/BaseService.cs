@@ -2,6 +2,7 @@
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace JoyKioskApi.Services
@@ -15,17 +16,18 @@ namespace JoyKioskApi.Services
             _configuration = configuration;
         }
 
-        protected async Task<LoginResponseDto> CreateTokenUser(string refreshToken, string userId, string username, int roleId)
+        protected async Task<LoginResponseDto> CreateTokenUser(CreateJwtToken param)
         {
             string jwtKey = _configuration["Jwts:Key"]!;
 
             List<Claim> claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, refreshToken),
-                new Claim(JwtRegisteredClaimNames.Jti, username),
-                new Claim(ClaimTypes.Role, roleId.ToString()),
-                new Claim(ClaimTypes.Name,username),
-                new Claim(JwtRegisteredClaimNames.NameId, userId),
+                new Claim(JwtRegisteredClaimNames.Sub, param.RefreshToken!),
+                new Claim(JwtRegisteredClaimNames.Jti, param.UId!),
+                new Claim(ClaimTypes.Sid, param.Id.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, param.CustId!),
+                new Claim(JwtRegisteredClaimNames.NameId, param.UId!),
+                new Claim(ClaimTypes.Authentication, param.CrmToken!)
             };
 
             string base64Key = Convert.ToBase64String(Encoding.UTF8.GetBytes(jwtKey));
@@ -43,18 +45,29 @@ namespace JoyKioskApi.Services
                  claims: claims,
                  expires: expires,
                  signingCredentials: credentials
-             );
+                 );
 
             LoginResponseDto loginResponse = new LoginResponseDto()
             {
-                Id = userId,
                 AccessToken = new JwtSecurityTokenHandler().WriteToken(token),
-                RefreshToken = refreshToken,
-                GenerateDate = issues,
+                RefreshToken = param.RefreshToken,
+                GeneratedDate = issues,
                 ExpireDate = expires,
-                RoleId = roleId
+                UserId = param.UId,
+                CustId = param.CustId
             };
             return await Task.FromResult<LoginResponseDto>(loginResponse);
         }
+
+        public string GenerateRefreshToken()
+        {
+            var randomNumber = new byte[32];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomNumber);
+                return Convert.ToBase64String(randomNumber);
+            }
+        }
+
     }
 }

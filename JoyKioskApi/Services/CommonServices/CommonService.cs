@@ -1,27 +1,102 @@
 ﻿using System.Net.Http.Headers;
+using System.Text;
 
 namespace JoyKioskApi.Services.CommonServices;
 
 public class CommonService : ICommonService
 {
     private readonly IConfiguration _configuration;
-    private static HttpClient _client = new();
 
     public CommonService(IConfiguration configuration)
     {
         _configuration = configuration;
-        _client.BaseAddress = new Uri(_configuration["CrmApi"]!.ToString());
-        _client.DefaultRequestHeaders.Accept.Clear();
-        _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(_configuration["AuthToken"]!.ToString());
     }
 
-    public async Task<HttpResponseMessage> CrmGetAsync(string endpoint) => await _client.GetAsync(endpoint);
+    public async Task<HttpResponseMessage> CrmGetAsync(string? crmToken, string endpoint, object? data = default)
+    {
+        HttpClient client = new();
+        client.BaseAddress = new Uri(Environment.GetEnvironmentVariable("CrmApi")!.ToString());
+        client.DefaultRequestHeaders.Accept.Clear();
+        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-    public async Task<HttpResponseMessage> CrmPostAsync(string endpoint, object data) => await _client.PostAsJsonAsync(endpoint, data);
+        if (string.IsNullOrEmpty(crmToken))
+        {
+            var byteArray = Encoding.ASCII.GetBytes("admin:1234");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+        }
+        else
+        {
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", crmToken);
+        }
+        
+        return await client.GetAsync(endpoint);
+    }
 
-    public async Task<HttpResponseMessage> CrmPutAsync(string endpoint, object data) => await _client.PutAsJsonAsync(endpoint, data);
+    public async Task<HttpResponseMessage> CrmPostAsync(string? crmToken, string endpoint, object data)
+    {
+        HttpClient client = new();
+        client.BaseAddress = new Uri(Environment.GetEnvironmentVariable("CrmApi")!.ToString());
+        client.DefaultRequestHeaders.Accept.Clear();
+        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        if (string.IsNullOrEmpty(crmToken))
+        {
+            var byteArray = Encoding.ASCII.GetBytes("admin:1234");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+        }
+        else
+        {
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", crmToken);
+        }
 
-    public async Task<HttpResponseMessage> DeleteProductAsync(string endpoint) => await _client.DeleteAsync(endpoint);
+        return await client.PostAsJsonAsync(endpoint, data);
+    }
+
+    public async Task<HttpResponseMessage> CrmPutAsync(string? crmToken, string endpoint, object data)
+    {
+        HttpClient client = new();
+        client.BaseAddress = new Uri(Environment.GetEnvironmentVariable("CrmApi")!.ToString());
+        client.DefaultRequestHeaders.Accept.Clear();
+        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        if (string.IsNullOrEmpty(crmToken))
+        {
+            var byteArray = Encoding.ASCII.GetBytes("admin:1234");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+        }
+        else
+        {
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", crmToken);
+        }
+
+        return await client.PutAsJsonAsync(endpoint, data);
+    }
+
+    public async Task<HttpResponseMessage> DeleteProductAsync(string? crmToken, string endpoint, object data)
+    {
+        HttpClient client = new();
+        client.BaseAddress = new Uri(Environment.GetEnvironmentVariable("CrmApi")!.ToString());
+        client.DefaultRequestHeaders.Accept.Clear();
+        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        if (string.IsNullOrEmpty(crmToken))
+        {
+            var byteArray = Encoding.ASCII.GetBytes("admin:1234");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+        }
+        else
+        {
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", crmToken);
+        }
+
+        return await client.DeleteAsync(endpoint);
+    }
+
+    public async Task<HttpResponseMessage> PostUnAuthenAsync(string endpoint, object data)
+    {
+        HttpClient client = new();
+        client.BaseAddress = new Uri(Environment.GetEnvironmentVariable("CrmApi")!.ToString());
+        client.DefaultRequestHeaders.Accept.Clear();
+        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        //client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(_configuration["AuthToken"]!.ToString());
+        return await client.PostAsJsonAsync(endpoint, data);
+    }
 
 }

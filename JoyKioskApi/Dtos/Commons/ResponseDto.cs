@@ -1,17 +1,17 @@
-﻿namespace JoyKioskApi.Dtos.Commons
+﻿using System.Text.Json.Serialization;
+
+namespace JoyKioskApi.Dtos.Commons
 {
     public class ResponseDto
     {
         public class ResultResponse
         {
+            [JsonPropertyName("isSuccess")]
             public bool IsSuccess { get; set; }
+            [JsonPropertyName("data")]
             public object? Data { get; set; }
-        }
-
-        public class ErrorResponse
-        {
-            public int ErrorCode { get; set; }
-            public string? ErrorMessage { get; set; }
+            [JsonPropertyName("message")]
+            public string? Message { get; set; }
         }
 
         public class PageginationResultResponse<TModel>

@@ -30,7 +30,7 @@ namespace JoyKioskApi.Constants
         public static readonly string STATUS_DUPLICATE_DATA = "Duplicate data";
         public static readonly string STATUS_PASSWORD_NOT_MATCH = "This username or password not match";
         public static readonly string STATUS_INVALID_REQUEST_DATA = "Invalid request data";
-        public static readonly string STATUS_INVALID_REQUEST_HEADER = "Invalid request header.Request Header of POST and PUT method should be either application/json or multipart/form-data.";
+        public static readonly string STATUS_INVALID_REQUEST_HEADER = "Invalid request header";
         public static readonly string STATUS_TOKEN_EXPIRED = "Token is already expired";
         public static readonly string DATA_STATUS_ACTIVE = "active";
         public static readonly string DATA_STATUS_CANCEL = "cancel";
@@ -44,6 +44,6 @@ namespace JoyKioskApi.Constants
         public static readonly string DATA_STATUS_FORBIDDEN = "Your request is denied";
         public static readonly string DATA_OTP_EXPIRE = "OTP หมดอายุ โปรดขอรหัสอีกครั้ง";
         public static readonly string DATA_CODE_EXPIRE = "รหัสยืนยันนี้ไม่ถูกต้อง หรือรหัสยืนยันหมดอายุแล้ว โปรดขอรหัสอีกครั้ง";
-        
+        public static readonly string PLEASE_RE_LOGIN = "Please log in again.";
     }
 }

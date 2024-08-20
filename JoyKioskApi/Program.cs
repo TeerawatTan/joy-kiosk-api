@@ -1,14 +1,28 @@
+using JoyKioskApi.Datas;
+using JoyKioskApi.Hubs;
+using JoyKioskApi.Repositories.Logings;
+using JoyKioskApi.Repositories.Users;
 using JoyKioskApi.Services.Authentications;
 using JoyKioskApi.Services.CommonServices;
+using JoyKioskApi.Services.Customers;
+using JoyKioskApi.Services.Otps;
+using JoyKioskApi.Services.Payments;
+using JoyKioskApi.Services.Promotions;
+using JoyKioskApi.Services.Users;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+//var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+builder.Services.AddEntityFrameworkNpgsql().AddDbContext<AppDbContext>();
 
 // Add Services
 #region Services
@@ -16,22 +30,31 @@ var builder = WebApplication.CreateBuilder(args);
 // Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICommonService, CommonService>();
-
-
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IBankPaymentService, BankPaymentService>();
+builder.Services.AddScoped<IOtpService, OtpService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<IPromotionService, PromotionService>();
 
 // Repositories
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+
+builder.Services.AddScoped<IUserRepo, UserRepo>();
+builder.Services.AddScoped<IUserTokenRepo, UserTokenRepo>();
+builder.Services.AddScoped<ILogTxnRepository, LogTxnRepository>();
 
 
 #endregion
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.AddEndpointsApiExplorer();
-
+builder.Services.AddSignalR();
 
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Joy Kiosk API Document", Version = "v.1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Sample Joy Kiosk API Document", Version = "v.1" });
     c.TagActionsBy(api =>
     {
         if (api.GroupName != null)
@@ -71,7 +94,12 @@ builder.Services.AddSwaggerGen(c =>
                         Array.Empty<string>()
         }
     });
+    //c.OperationFilter<SecurityRequirementsOperationFilter>();
     c.CustomSchemaIds(a => a.FullName);
+
+    // using System.Reflection;
+    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 });
 
 
@@ -110,19 +138,21 @@ builder.Services.AddCors(o => o.AddPolicy("CorsJoyKioskWebAPI", builder =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
-//{
+if (app.Environment.IsDevelopment())
+{
     app.UseSwagger();
     app.UseSwaggerUI();
-//}
+}
 
 app.UseHttpsRedirection();
-
-app.UseAuthentication();
-app.UseAuthorization();
 
 app.UseCors("CorsJoyKioskWebAPI");
 
 app.MapControllers();
+app.MapHub<MessageHub>("/api/payment/callback");
+app.UseRouting();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.Run();
